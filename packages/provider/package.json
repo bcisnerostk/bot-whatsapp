@@ -1,5 +1,5 @@
 {
-    "name": "@bot-whatsapp/provider",
+    "name": "@alvatech/bot-whatsapp-provider",
     "version": "0.0.113-alpha.0",
     "description": "Esto es el conector a Twilio, Meta, etc...",
     "main": "./lib/mock/index.cjs",
@@ -31,6 +31,6 @@
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/codigoencasa/bot-whatsapp/tree/main/packages/provider"
+        "url": "https://github.com/bcisnerostk/bot-whatsapp/tree/main/packages/provider"
     }
 }

@@ -3,6 +3,7 @@ const { ProviderClass } = require('@bot-whatsapp/bot')
 const { Console } = require('console')
 const mime = require('mime-types')
 const { createWriteStream, readFileSync } = require('fs')
+const { basename } = require('path')
 const { wwebCleanNumber, wwebGenerateImage, wwebIsValidNumber } = require('./utils')
 
 const logger = new Console({
@@ -33,6 +34,7 @@ class WebWhatsappProvider extends ProviderClass {
                 args: ['--no-sandbox', '--disable-setuid-sandbox', '--unhandled-rejections=strict'],
                 //executablePath: 'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
             },
+            ...args,
         })
 
         const listEvents = this.busEvents()
@@ -199,12 +201,13 @@ class WebWhatsappProvider extends ProviderClass {
      * @param {*} text
      * @returns
      */
-    sendVideo = async (number, filePath) => {
+    sendVideo = async (number, filePath, caption) => {
         const base64 = readFileSync(filePath, { encoding: 'base64' })
         const mimeType = mime.lookup(filePath)
         const media = new MessageMedia(mimeType, base64)
         return this.vendor.sendMessage(number, media, {
             sendMediaAsDocument: true,
+            caption
         })
     }
 
@@ -215,11 +218,11 @@ class WebWhatsappProvider extends ProviderClass {
      * @param {*} text
      * @returns
      */
-    sendFile = async (number, filePath) => {
+    sendFile = async (number, filePath, caption) => {
         const base64 = readFileSync(filePath, { encoding: 'base64' })
         const mimeType = mime.lookup(filePath)
-        const media = new MessageMedia(mimeType, base64)
-        return this.vendor.sendMessage(number, media)
+        const media = new MessageMedia(mimeType, base64, basename(filePath))
+        return this.vendor.sendMessage(number, media, { caption })
     }
 
     /**
@@ -234,13 +237,13 @@ class WebWhatsappProvider extends ProviderClass {
         const mimeType = mime.lookup(fileDownloaded)
 
         if (mimeType.includes('image')) return this.sendImage(number, fileDownloaded, text)
-        if (mimeType.includes('video')) return this.sendVideo(number, fileDownloaded)
+        if (mimeType.includes('video')) return this.sendVideo(number, fileDownloaded, text)
         if (mimeType.includes('audio')) {
             const fileOpus = await convertAudio(fileDownloaded)
             return this.sendAudio(number, fileOpus)
         }
 
-        return this.sendFile(number, fileDownloaded)
+        return this.sendFile(number, fileDownloaded, text)
     }
 
     /**
@@ -261,7 +264,7 @@ class WebWhatsappProvider extends ProviderClass {
     sendMessage = async (userId, message, { options }) => {
         const number = wwebCleanNumber(userId)
         if (options?.buttons?.length) return this.sendButtons(number, message, options.buttons)
-        if (options?.media) return this.sendMedia(number, options.media)
+        if (options?.media) return this.sendMedia(number, options.media, message)
         return this.sendText(number, message)
     }
 }
